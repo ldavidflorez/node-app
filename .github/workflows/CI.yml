@@ -20,13 +20,13 @@ jobs:
       
       - name: Get access to OCIR
         id: get-ocir
-        uses: oracle-actions/get-ocir-repository@v1.0
+        uses: oracle-actions/get-ocir-repository@v1.3.0
         with:
           name: node-app
           compartment: ${{ secrets.OCI_COMPARTMENT_OCID }}
       
       - name: Log into OCIR
-        uses: oracle-actions/login-ocir@v1.0
+        uses: oracle-actions/login-ocir@v1.3.0
         id: login-ocir
         with:
           auth_token: ${{ secrets.OCI_AUTH_TOKEN }}
@@ -34,12 +34,12 @@ jobs:
       - name: docker build
         id: docker-build
         run: |
-          docker build -t ${{ steps.get-ocir.outputs.registry }}/${{ steps.get-ocir.outputs.repository }}:${{ github.sha }} .
+          docker build -t ${{ steps.get-ocir.outputs.repo_path }}:${{ github.sha }} .
       
       - name: docker push
         id: docker-push
         run: |
-          docker push ${{ steps.get-ocir.outputs.registry }}/${{ steps.get-ocir.outputs.repository }}:${{ github.sha }}
+          docker push ${{ steps.get-ocir.outputs.repo_path }}:${{ github.sha }}
       
       - name: Repository Dispatch
         uses: peter-evans/repository-dispatch@v1
@@ -47,4 +47,4 @@ jobs:
           token: ${{ secrets.PAT }}
           repository: ${{ github.actor }}/argocd-node-app-config
           event-type: new-image
-          client-payload: '{"image": "${{ steps.get-ocir.outputs.registry }}/${{ steps.get-ocir.outputs.repository }}:${{ github.sha }}"}'
+          client-payload: '{"image": "${{ steps.get-ocir.outputs.repo_path }}:${{ github.sha }}"}'
