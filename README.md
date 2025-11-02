@@ -21,6 +21,11 @@ To use the CI/CD pipeline, set up the following secrets in your GitHub repositor
 - `OCI_COMPARTMENT_OCID`: The OCID of the OCI compartment containing the repository.
 - `OCI_AUTH_TOKEN`: An OCI authentication token for accessing OCIR.
 - `PAT`: A GitHub Personal Access Token with `repo` scope, used to dispatch events to the ArgoCD configuration repository.
+- `OCI_CLI_USER`: The OCID of the OCI user.
+- `OCI_CLI_TENANCY`: The OCID of the OCI tenancy.
+- `OCI_CLI_FINGERPRINT`: The fingerprint of the OCI API key.
+- `OCI_CLI_KEY_CONTENT`: The content of the OCI private key (in PEM format).
+- `OCI_CLI_REGION`: The OCI region (e.g., `us-ashburn-1`).
 
 ### Creating a GitHub Personal Access Token (PAT)
 
