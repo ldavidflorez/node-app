@@ -1,34 +1,44 @@
 name: CI
 
 on:
-  workflow_dispatch:
-env:
-  IMAGE_NAME: examplenode-dev
-  
+  push:
+    branches:
+      - main
+
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v2
-
-    - name: Login to DockerHub
-      uses: docker/login-action@v1
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-        
-    - name: Build and push
-      uses: docker/build-push-action@v2
-      with:
-        context: .
-        push: true
-        tags: ${{ github.actor }}/${{ env.IMAGE_NAME }}:${{ github.run_number }}
-
-    - name: Repository Dispatch
-      uses: peter-evans/repository-dispatch@v1
-      with:
-        token: ${{ secrets.PAT }}
-        repository: ${{ github.actor }}/argocd-node-app-config
-        event-type: new-image
-        client-payload: '{"image": "${{ github.actor }}/${{ env.IMAGE_NAME }}:${{ github.run_number }}"}'
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Get access to OCIR
+        id: get-ocir
+        uses: oracle-actions/get-ocir-repository@v1.0
+        with:
+          name: ${{ secrets.OCI_DOCKER_REPO }}
+          compartment: ${{ secrets.OCI_COMPARTMENT_OCID }}
+      
+      - name: Log into OCIR
+        uses: oracle-actions/login-ocir@v1.0
+        id: login-ocir
+        with:
+          auth_token: ${{ secrets.OCI_AUTH_TOKEN }}
+      
+      - name: docker build
+        id: docker-build
+        run: |
+          docker build -t ${{ secrets.OCI_DOCKER_REPO }}:${{ github.sha }} .
+      
+      - name: docker push
+        id: docker-push
+        run: |
+          docker push ${{ secrets.OCI_DOCKER_REPO }}:${{ github.sha }}
+      
+      - name: Repository Dispatch
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.PAT }}
+          repository: ${{ github.actor }}/argocd-node-app-config
+          event-type: new-image
+          client-payload: '{"image": "${{ secrets.OCI_DOCKER_REPO }}:${{ github.sha }}"}'
